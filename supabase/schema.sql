@@ -24,13 +24,18 @@ create policy "ログインユーザーは物件を閲覧可能"
   to authenticated
   using (true);
 
--- （参考）物件の追加・編集・削除も許可したい場合は以下のポリシーを有効化する
--- create policy "ログインユーザーは物件を追加可能"
---   on public.properties for insert to authenticated with check (true);
--- create policy "ログインユーザーは物件を更新可能"
---   on public.properties for update to authenticated using (true) with check (true);
--- create policy "ログインユーザーは物件を削除可能"
---   on public.properties for delete to authenticated using (true);
+-- 物件の追加・編集・削除（CRUD）もログイン済みユーザーに許可する
+drop policy if exists "ログインユーザーは物件を追加可能" on public.properties;
+create policy "ログインユーザーは物件を追加可能"
+  on public.properties for insert to authenticated with check (true);
+
+drop policy if exists "ログインユーザーは物件を更新可能" on public.properties;
+create policy "ログインユーザーは物件を更新可能"
+  on public.properties for update to authenticated using (true) with check (true);
+
+drop policy if exists "ログインユーザーは物件を削除可能" on public.properties;
+create policy "ログインユーザーは物件を削除可能"
+  on public.properties for delete to authenticated using (true);
 
 -- 4. サンプルデータの投入（物件名・家賃・エリア）
 insert into public.properties (name, rent, area) values

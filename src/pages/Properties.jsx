@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabaseClient'
+import PropertyFormModal from '../components/PropertyFormModal'
 
 // 物件一覧画面（ログイン後に表示される）
 export default function Properties() {
@@ -12,31 +13,100 @@ export default function Properties() {
   const [loading, setLoading] = useState(true) // 取得中かどうか
   const [error, setError] = useState('') // エラーメッセージ
 
-  // 画面表示時に Supabase から物件データを取得する
-  useEffect(() => {
-    const fetchProperties = async () => {
-      setLoading(true)
-      setError('')
+  // モーダル表示の状態管理
+  const [isModalOpen, setIsModalOpen] = useState(false) // モーダルを開いているか
+  const [editingProperty, setEditingProperty] = useState(null) // 編集対象（新規追加時は null）
 
-      // properties テーブルから物件名・家賃・エリアを取得（登録日時の昇順）
-      const { data, error } = await supabase
-        .from('properties')
-        .select('id, name, rent, area')
-        .order('created_at', { ascending: true })
+  // Supabase から物件データを取得する
+  const fetchProperties = async () => {
+    setLoading(true)
+    setError('')
 
-      setLoading(false)
+    // properties テーブルから物件名・家賃・エリアを取得（登録日時の昇順）
+    const { data, error } = await supabase
+      .from('properties')
+      .select('id, name, rent, area')
+      .order('created_at', { ascending: true })
 
-      if (error) {
-        // 取得失敗時はエラーメッセージを表示する
-        setError('物件データの取得に失敗しました：' + error.message)
-        return
-      }
+    setLoading(false)
 
-      setProperties(data)
+    if (error) {
+      // 取得失敗時はエラーメッセージを表示する
+      setError('物件データの取得に失敗しました：' + error.message)
+      return
     }
 
+    setProperties(data)
+  }
+
+  // 画面表示時に物件データを取得する
+  useEffect(() => {
     fetchProperties()
   }, [])
+
+  // 「追加」ボタン: 空のモーダルを開く
+  const handleAddClick = () => {
+    setEditingProperty(null)
+    setIsModalOpen(true)
+  }
+
+  // 「編集」ボタン: 対象の物件をモーダルに表示する
+  const handleEditClick = (property) => {
+    setEditingProperty(property)
+    setIsModalOpen(true)
+  }
+
+  // モーダルを閉じる
+  const handleCloseModal = () => {
+    setIsModalOpen(false)
+    setEditingProperty(null)
+  }
+
+  // モーダルの保存処理（新規追加 or 更新）
+  const handleSave = async (formData) => {
+    let result
+
+    if (editingProperty) {
+      // 編集モード: 既存レコードを更新する
+      result = await supabase
+        .from('properties')
+        .update(formData)
+        .eq('id', editingProperty.id)
+    } else {
+      // 新規追加モード: レコードを挿入する
+      result = await supabase.from('properties').insert(formData)
+    }
+
+    // エラーがあれば呼び出し元（モーダル）に返して表示させる
+    if (result.error) {
+      return { error: result.error }
+    }
+
+    // 成功したらモーダルを閉じて一覧を再取得する
+    handleCloseModal()
+    await fetchProperties()
+    return {}
+  }
+
+  // 「削除」ボタン: 確認のうえ削除する
+  const handleDelete = async (property) => {
+    // 誤操作防止のため確認ダイアログを表示する
+    const confirmed = window.confirm(`「${property.name}」を削除しますか？`)
+    if (!confirmed) return
+
+    const { error } = await supabase
+      .from('properties')
+      .delete()
+      .eq('id', property.id)
+
+    if (error) {
+      setError('削除に失敗しました：' + error.message)
+      return
+    }
+
+    // 成功したら一覧を再取得する
+    await fetchProperties()
+  }
 
   // ログアウト処理
   const handleLogout = async () => {
@@ -55,9 +125,14 @@ export default function Properties() {
           <h1>物件一覧</h1>
           {user && <p className="user-email">{user.email} でログイン中</p>}
         </div>
-        <button className="logout-button" onClick={handleLogout}>
-          ログアウト
-        </button>
+        <div className="header-actions">
+          <button className="add-button" onClick={handleAddClick}>
+            ＋ 物件を追加
+          </button>
+          <button className="logout-button" onClick={handleLogout}>
+            ログアウト
+          </button>
+        </div>
       </header>
 
       <main>
@@ -77,11 +152,36 @@ export default function Properties() {
                 <h2 className="property-name">{property.name}</h2>
                 <p className="property-rent">{formatRent(property.rent)} / 月</p>
                 <p className="property-area">エリア：{property.area}</p>
+
+                {/* 各カードの操作ボタン（編集・削除） */}
+                <div className="card-actions">
+                  <button
+                    className="button-secondary"
+                    onClick={() => handleEditClick(property)}
+                  >
+                    編集
+                  </button>
+                  <button
+                    className="button-danger"
+                    onClick={() => handleDelete(property)}
+                  >
+                    削除
+                  </button>
+                </div>
               </div>
             ))}
           </div>
         )}
       </main>
+
+      {/* 追加・編集モーダル */}
+      {isModalOpen && (
+        <PropertyFormModal
+          property={editingProperty}
+          onSave={handleSave}
+          onClose={handleCloseModal}
+        />
+      )}
     </div>
   )
 }
