@@ -540,21 +540,24 @@ body {
   color: #6b7280;
 }
 
-/* モーダルのチェックボックス入力（公開設定など） */
-.checkbox-field {
-  display: flex;
+/* モーダルのチェックボックス入力（公開設定など）
+   ※ .modal label の縦並びスタイルを打ち消すため .modal を付けて詳細度を上げる */
+.modal label.checkbox-field {
   flex-direction: row;
   align-items: flex-start;
   gap: 0.6rem;
   font-size: 0.95rem;
+  font-weight: 600;
   cursor: pointer;
 }
 
-/* チェックボックスを大きく表示し、先頭行に合わせる */
-.checkbox-field input[type='checkbox'] {
+/* チェックボックスを大きく表示し、.modal input の枠線・余白を打ち消す */
+.modal .checkbox-field input[type='checkbox'] {
   width: 1.3rem;
   height: 1.3rem;
   margin: 0;
+  padding: 0;
+  border: none;
   flex-shrink: 0;
   cursor: pointer;
 }
