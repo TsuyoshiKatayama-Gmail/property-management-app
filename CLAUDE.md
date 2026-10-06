@@ -98,6 +98,46 @@ Supabase の接続情報は `.env` で管理し、**Git にはコミットしな
 
 ---
 
+## デプロイ（Vercel）
+
+本アプリは **Vercel** にデプロイしている。GitHub リポジトリと連携しており、**`main` ブランチへの push で本番環境へ自動デプロイ**される。
+
+- **本番 URL**: https://property-management-app-g1ct.vercel.app/
+- **連携リポジトリ**: https://github.com/TsuyoshiKatayama-Gmail/property-management-app
+
+### プロジェクト設定（Settings > Build and Deployment）
+
+| 項目 | 設定値 |
+|------|--------|
+| Framework Preset | Vite |
+| Build Command | `npm run build` |
+| Output Directory | `dist` |
+| Install Command | 既定（Override なし） |
+| Node.js Version | 既定（Override なし） |
+
+- SPA 用のルーティング対応として、ルート直下の `vercel.json` に `rewrites`（全パス → `/index.html`）を定義している。React Router のパスを直接開いても 404 にならないようにするための設定。
+
+### 環境（Settings > Environments）
+
+| 環境 | ブランチ連携 | ドメイン |
+|------|--------------|----------|
+| Production | `main` | property-management-app-g1ct.vercel.app ほか |
+| Preview | 未割り当ての全 git ブランチ | カスタムドメインなし |
+| Development | CLI からアクセス | カスタムドメインなし |
+
+### 環境変数（Settings > Environment Variables）
+
+Supabase の接続情報を **Vercel ダッシュボード側にも登録**している（変数名はローカルの `.env` と同一。**値は機密のため Git にはコミットしない**）。
+
+| 変数名 | 説明 |
+|--------|------|
+| `VITE_SUPABASE_URL` | Supabase の Project URL |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | Supabase の Publishable key |
+
+**IMPORTANT: Vercel 側の環境変数を変更した場合は、反映のために再デプロイ（Redeploy）が必要。**
+
+---
+
 ## ディレクトリ構成
 
 ```
