@@ -121,9 +121,15 @@ Supabase の接続情報は `.env` で管理し、**Git にはコミットしな
 
 | 環境 | ブランチ連携 | ドメイン |
 |------|--------------|----------|
-| Production | `main` | property-management-app-g1ct.vercel.app ほか |
+| Production | `main` | 下記3ドメイン |
 | Preview | 未割り当ての全 git ブランチ | カスタムドメインなし |
 | Development | CLI からアクセス | カスタムドメインなし |
+
+Production に割り当てられているドメイン：
+
+- https://property-management-app-g1ct.vercel.app/ （本番 URL）
+- property-management-app-g1ct-acme-6db9.vercel.app
+- property-management-app-g1ct-git-main-acme-6db9.vercel.app
 
 ### 環境変数（Settings > Environment Variables）
 
