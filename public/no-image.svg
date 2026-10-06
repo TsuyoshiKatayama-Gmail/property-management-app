@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300" role="img" aria-label="NO IMAGE">
+  <!-- 背景 -->
+  <rect width="400" height="300" fill="#eceff1"/>
+
+  <!-- 写真フレーム風のアイコン -->
+  <g transform="translate(130 70)">
+    <rect x="0" y="0" width="140" height="100" rx="10" fill="#cfd4d8"/>
+    <rect x="12" y="12" width="116" height="76" rx="6" fill="#eceff1"/>
+    <!-- 太陽 -->
+    <circle cx="40" cy="40" r="12" fill="#b6bcc2"/>
+    <!-- 山 -->
+    <path d="M12 88 L50 50 L78 78 L98 58 L128 88 Z" fill="#b6bcc2"/>
+  </g>
+
+  <!-- NO IMAGE テキスト -->
+  <text x="200" y="220" text-anchor="middle"
+        font-family="-apple-system, 'Hiragino Sans', 'Noto Sans JP', sans-serif"
+        font-size="40" font-weight="700" fill="#aab0b6">NO IMAGE</text>
+</svg>

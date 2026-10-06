@@ -174,14 +174,16 @@ export default function Properties() {
           <div className="property-grid">
             {properties.map((property) => (
               <div className="property-card" key={property.id}>
-                {/* 画像が登録されていれば表示する */}
-                {property.image_url && (
-                  <img
-                    className="property-image"
-                    src={property.image_url}
-                    alt={property.name}
-                  />
-                )}
+                {/* 画像が登録されていれば表示し、無ければ NO IMAGE を表示する */}
+                <img
+                  className="property-image"
+                  src={property.image_url || '/no-image.svg'}
+                  alt={property.name}
+                  onError={(e) => {
+                    // 画像URLが無効な場合も NO IMAGE にフォールバックする
+                    e.currentTarget.src = '/no-image.svg'
+                  }}
+                />
                 <h2 className="property-name">{property.name}</h2>
                 <p className="property-rent">{formatRent(property.rent)} / 月</p>
                 <p className="property-area">エリア：{property.area}</p>
