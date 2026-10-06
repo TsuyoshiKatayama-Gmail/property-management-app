@@ -10,6 +10,7 @@ export default function PropertyFormModal({ property, onSave, onClose }) {
   const [imageFile, setImageFile] = useState(null) // 新しく選択された画像ファイル
   const [previewUrl, setPreviewUrl] = useState(property?.image_url ?? '') // プレビュー表示用URL
   const [removeImage, setRemoveImage] = useState(false) // 既存画像を削除するかどうか
+  const [isPublic, setIsPublic] = useState(property?.is_public ?? false) // 公開するかどうか
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
 
@@ -45,6 +46,7 @@ export default function PropertyFormModal({ property, onSave, onClose }) {
       name: name.trim(),
       rent: Number(rent),
       area: area.trim(),
+      is_public: isPublic,
       imageFile,
       removeImage,
     })
@@ -119,6 +121,16 @@ export default function PropertyFormModal({ property, onSave, onClose }) {
             </button>
           </div>
         )}
+
+        {/* 公開設定: ON にすると他のユーザーも閲覧できる（編集・削除は不可） */}
+        <label className="checkbox-field">
+          <input
+            type="checkbox"
+            checked={isPublic}
+            onChange={(e) => setIsPublic(e.target.checked)}
+          />
+          この物件を公開する（他のユーザーが閲覧できます）
+        </label>
 
         <div className="modal-actions">
           <button type="button" className="button-secondary" onClick={onClose}>

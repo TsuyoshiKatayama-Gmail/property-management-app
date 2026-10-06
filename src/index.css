@@ -514,6 +514,47 @@ body {
   color: #6b7280;
 }
 
+/* 公開状態・所有者を示すバッジ */
+.property-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+}
+
+.badge {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+}
+
+.badge-public {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.badge-readonly {
+  background-color: #f3f4f6;
+  color: #6b7280;
+}
+
+/* モーダルのチェックボックス入力（公開設定など） */
+.checkbox-field {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.checkbox-field input[type='checkbox'] {
+  width: auto;
+  margin: 0;
+}
+
 /* ===== 一覧表示（リストレイアウト） ===== */
 .property-list {
   display: flex;

@@ -82,12 +82,12 @@ export default function Properties() {
     setLoading(true)
     setError('')
 
-    // properties テーブルから自分が所有する物件だけを取得（登録日時の昇順）
-    // ※ RLS でも所有者に限定しているが、意図を明確にするため明示的に絞り込む
+    // 自分が所有する物件、または公開中（is_public）の物件を取得（登録日時の昇順）
+    // ※ RLS でも同条件に限定しているが、意図を明確にするため明示的に絞り込む
     const { data, error } = await supabase
       .from('properties')
-      .select('id, name, rent, area, image_url')
-      .eq('owner_id', user.id)
+      .select('id, name, rent, area, image_url, owner_id, is_public')
+      .or(`owner_id.eq.${user.id},is_public.eq.true`)
       .order('created_at', { ascending: true })
 
     setLoading(false)
@@ -352,39 +352,50 @@ export default function Properties() {
               </p>
             )}
             <div className={viewMode === 'list' ? 'property-list' : 'property-grid'}>
-              {filteredProperties.map((property) => (
-              <div className="property-card" key={property.id}>
-                {/* 画像が登録されていれば表示し、無ければ NO IMAGE を表示する */}
-                <img
-                  className="property-image"
-                  src={property.image_url || '/no-image.svg'}
-                  alt={property.name}
-                  onError={(e) => {
-                    // 画像URLが無効な場合も NO IMAGE にフォールバックする
-                    e.currentTarget.src = '/no-image.svg'
-                  }}
-                />
-                <h2 className="property-name">{property.name}</h2>
-                <p className="property-rent">{formatRent(property.rent)} / 月</p>
-                <p className="property-area">エリア：{property.area}</p>
+              {filteredProperties.map((property) => {
+                // 自分が所有する物件かどうか（他人の公開物件は閲覧専用）
+                const isOwner = property.owner_id === user?.id
+                return (
+                <div className="property-card" key={property.id}>
+                  {/* 画像が登録されていれば表示し、無ければ NO IMAGE を表示する */}
+                  <img
+                    className="property-image"
+                    src={property.image_url || '/no-image.svg'}
+                    alt={property.name}
+                    onError={(e) => {
+                      // 画像URLが無効な場合も NO IMAGE にフォールバックする
+                      e.currentTarget.src = '/no-image.svg'
+                    }}
+                  />
+                  {/* 公開状態・所有者を示すバッジ */}
+                  <div className="property-badges">
+                    {property.is_public && <span className="badge badge-public">公開中</span>}
+                    {!isOwner && <span className="badge badge-readonly">閲覧のみ</span>}
+                  </div>
+                  <h2 className="property-name">{property.name}</h2>
+                  <p className="property-rent">{formatRent(property.rent)} / 月</p>
+                  <p className="property-area">エリア：{property.area}</p>
 
-                {/* 各カードの操作ボタン（編集・削除） */}
-                <div className="card-actions">
-                  <button
-                    className="button-secondary"
-                    onClick={() => handleEditClick(property)}
-                  >
-                    編集
-                  </button>
-                  <button
-                    className="button-danger"
-                    onClick={() => handleDelete(property)}
-                  >
-                    削除
-                  </button>
+                  {/* 操作ボタンは自分が所有する物件にだけ表示する */}
+                  {isOwner && (
+                    <div className="card-actions">
+                      <button
+                        className="button-secondary"
+                        onClick={() => handleEditClick(property)}
+                      >
+                        編集
+                      </button>
+                      <button
+                        className="button-danger"
+                        onClick={() => handleDelete(property)}
+                      >
+                        削除
+                      </button>
+                    </div>
+                  )}
                 </div>
-              </div>
-              ))}
+                )
+              })}
             </div>
           </>
         )}
