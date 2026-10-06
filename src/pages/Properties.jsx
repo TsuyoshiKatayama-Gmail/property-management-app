@@ -17,6 +17,18 @@ export default function Properties() {
   const [isModalOpen, setIsModalOpen] = useState(false) // モーダルを開いているか
   const [editingProperty, setEditingProperty] = useState(null) // 編集対象（新規追加時は null）
 
+  // 表示モード（'grid' = タイル表示 / 'list' = 一覧表示）
+  // 前回選んだ表示モードを localStorage から復元する（初期値はタイル表示）
+  const [viewMode, setViewMode] = useState(
+    () => localStorage.getItem('propertiesViewMode') || 'grid'
+  )
+
+  // 表示モードを切り替え、次回のために localStorage に保存する
+  const handleViewModeChange = (mode) => {
+    setViewMode(mode)
+    localStorage.setItem('propertiesViewMode', mode)
+  }
+
   // Supabase から物件データを取得する
   const fetchProperties = async () => {
     setLoading(true)
@@ -171,6 +183,25 @@ export default function Properties() {
           {user && <p className="user-email">{user.email} でログイン中</p>}
         </div>
         <div className="header-actions">
+          {/* 表示モード切り替え（タイル / 一覧） */}
+          <div className="view-toggle" role="group" aria-label="表示モード切り替え">
+            <button
+              type="button"
+              className={viewMode === 'grid' ? 'is-active' : ''}
+              onClick={() => handleViewModeChange('grid')}
+              aria-pressed={viewMode === 'grid'}
+            >
+              タイル
+            </button>
+            <button
+              type="button"
+              className={viewMode === 'list' ? 'is-active' : ''}
+              onClick={() => handleViewModeChange('list')}
+              aria-pressed={viewMode === 'list'}
+            >
+              一覧
+            </button>
+          </div>
           <button className="add-button" onClick={handleAddClick}>
             ＋ 物件を追加
           </button>
@@ -191,7 +222,7 @@ export default function Properties() {
         )}
 
         {!loading && !error && properties.length > 0 && (
-          <div className="property-grid">
+          <div className={viewMode === 'list' ? 'property-list' : 'property-grid'}>
             {properties.map((property) => (
               <div className="property-card" key={property.id}>
                 {/* 画像が登録されていれば表示し、無ければ NO IMAGE を表示する */}

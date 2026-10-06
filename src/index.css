@@ -153,6 +153,41 @@ body {
   align-items: center;
 }
 
+/* 表示モード切り替え（タイル / 一覧）のトグルボタン */
+.view-toggle {
+  display: inline-flex;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: #ffffff;
+}
+
+.view-toggle button {
+  padding: 0.6rem 1rem;
+  background-color: #ffffff;
+  color: #374151;
+  border: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+/* ボタン間に区切り線を入れる */
+.view-toggle button + button {
+  border-left: 1px solid #d1d5db;
+}
+
+.view-toggle button:hover:not(.is-active) {
+  background-color: #f3f4f6;
+}
+
+/* 選択中の表示モードを強調する */
+.view-toggle button.is-active {
+  background-color: #2563eb;
+  color: #ffffff;
+}
+
 .add-button {
   padding: 0.6rem 1.2rem;
   background-color: #2563eb;
@@ -393,4 +428,83 @@ body {
 .property-area {
   font-size: 0.9rem;
   color: #6b7280;
+}
+
+/* ===== 一覧表示（リストレイアウト） ===== */
+.property-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* 一覧表示では各物件を横並び（画像＋情報＋操作ボタン）にする */
+.property-list .property-card {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1rem 1.25rem;
+}
+
+/* ホバー時の浮き上がりはタイル表示のみ。一覧表示では無効化する */
+.property-list .property-card:hover {
+  transform: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+/* 一覧表示のサムネイルは小さめの固定サイズにする */
+.property-list .property-image {
+  width: 120px;
+  height: 80px;
+  flex-shrink: 0;
+  margin-bottom: 0;
+}
+
+/* 物件名・家賃・エリアをまとめる情報エリア（画像とボタンの間を埋める） */
+.property-list .property-name,
+.property-list .property-rent,
+.property-list .property-area {
+  margin-bottom: 0;
+}
+
+/* 物件名は余白を使って左寄せで広げる */
+.property-list .property-name {
+  flex: 1;
+  min-width: 0;
+}
+
+/* 家賃・エリアは固定幅で揃える */
+.property-list .property-rent {
+  width: 160px;
+  flex-shrink: 0;
+  font-size: 1.15rem;
+}
+
+.property-list .property-area {
+  width: 160px;
+  flex-shrink: 0;
+}
+
+/* 一覧表示の操作ボタンは右端にまとめる */
+.property-list .card-actions {
+  margin-top: 0;
+  flex-shrink: 0;
+  width: auto;
+}
+
+.property-list .card-actions .button-secondary,
+.property-list .card-actions .button-danger {
+  flex: none;
+  padding: 0.5rem 1rem;
+}
+
+/* 画面が狭いときは一覧表示でも縦並びに折り返す */
+@media (max-width: 640px) {
+  .property-list .property-card {
+    flex-wrap: wrap;
+  }
+
+  .property-list .property-rent,
+  .property-list .property-area {
+    width: auto;
+  }
 }
