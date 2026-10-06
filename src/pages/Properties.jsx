@@ -1,20 +1,42 @@
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-
-// 物件一覧のダミーデータ（物件名・家賃・エリア）
-const DUMMY_PROPERTIES = [
-  { id: 1, name: 'グランドメゾン秋田中央', rent: 85000, area: '秋田市中央' },
-  { id: 2, name: 'リバーサイド川反レジデンス', rent: 72000, area: '秋田市川反' },
-  { id: 3, name: 'サンシャイン土崎ハイツ', rent: 58000, area: '秋田市土崎' },
-  { id: 4, name: 'パークビュー御所野', rent: 94000, area: '秋田市御所野' },
-  { id: 5, name: 'コンフォート横手ステーション', rent: 63000, area: '横手市駅前' },
-  { id: 6, name: 'ノースフォレスト大館', rent: 51000, area: '大館市' },
-]
+import { supabase } from '../lib/supabaseClient'
 
 // 物件一覧画面（ログイン後に表示される）
 export default function Properties() {
   const { user, signOut } = useAuth()
   const navigate = useNavigate()
+
+  const [properties, setProperties] = useState([]) // 物件データ一覧
+  const [loading, setLoading] = useState(true) // 取得中かどうか
+  const [error, setError] = useState('') // エラーメッセージ
+
+  // 画面表示時に Supabase から物件データを取得する
+  useEffect(() => {
+    const fetchProperties = async () => {
+      setLoading(true)
+      setError('')
+
+      // properties テーブルから物件名・家賃・エリアを取得（登録日時の昇順）
+      const { data, error } = await supabase
+        .from('properties')
+        .select('id, name, rent, area')
+        .order('created_at', { ascending: true })
+
+      setLoading(false)
+
+      if (error) {
+        // 取得失敗時はエラーメッセージを表示する
+        setError('物件データの取得に失敗しました：' + error.message)
+        return
+      }
+
+      setProperties(data)
+    }
+
+    fetchProperties()
+  }, [])
 
   // ログアウト処理
   const handleLogout = async () => {
@@ -38,14 +60,27 @@ export default function Properties() {
         </button>
       </header>
 
-      <main className="property-grid">
-        {DUMMY_PROPERTIES.map((property) => (
-          <div className="property-card" key={property.id}>
-            <h2 className="property-name">{property.name}</h2>
-            <p className="property-rent">{formatRent(property.rent)} / 月</p>
-            <p className="property-area">エリア：{property.area}</p>
+      <main>
+        {/* 取得中・エラー・0件・一覧表示をそれぞれ出し分ける */}
+        {loading && <p className="status-text">読み込み中...</p>}
+
+        {error && <p className="error">{error}</p>}
+
+        {!loading && !error && properties.length === 0 && (
+          <p className="status-text">登録されている物件はありません。</p>
+        )}
+
+        {!loading && !error && properties.length > 0 && (
+          <div className="property-grid">
+            {properties.map((property) => (
+              <div className="property-card" key={property.id}>
+                <h2 className="property-name">{property.name}</h2>
+                <p className="property-rent">{formatRent(property.rent)} / 月</p>
+                <p className="property-area">エリア：{property.area}</p>
+              </div>
+            ))}
           </div>
-        ))}
+        )}
       </main>
     </div>
   )

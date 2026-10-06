@@ -162,6 +162,13 @@ body {
   background-color: #f3f4f6;
 }
 
+/* 取得中・0件などのステータス表示 */
+.status-text {
+  color: #6b7280;
+  padding: 2rem 0;
+  text-align: center;
+}
+
 /* 物件カードのグリッドレイアウト */
 .property-grid {
   display: grid;
