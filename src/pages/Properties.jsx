@@ -35,6 +35,10 @@ export default function Properties() {
   const [rentMin, setRentMin] = useState('') // 家賃の下限
   const [rentMax, setRentMax] = useState('') // 家賃の上限
 
+  // 並べ替えの条件（キー: 登録日 / 家賃 / エリア、順序: 昇順 / 降順）
+  const [sortKey, setSortKey] = useState('created_at') // 'created_at' | 'rent' | 'area'
+  const [sortOrder, setSortOrder] = useState('asc') // 'asc'（昇順）| 'desc'（降順）
+
   // 絞り込み条件をすべてクリアする
   const handleResetFilters = () => {
     setKeyword('')
@@ -77,6 +81,30 @@ export default function Properties() {
     })
   }, [properties, keyword, areaFilter, rentMin, rentMax])
 
+  // 絞り込んだ物件を、選択された条件で並べ替える
+  const sortedProperties = useMemo(() => {
+    // 元の配列を壊さないようコピーしてから並べ替える
+    const sorted = [...filteredProperties].sort((a, b) => {
+      let comparison = 0
+
+      if (sortKey === 'rent') {
+        // 家賃: 数値の大小で比較
+        comparison = a.rent - b.rent
+      } else if (sortKey === 'area') {
+        // エリア: 日本語の五十音順で比較
+        comparison = String(a.area).localeCompare(String(b.area), 'ja')
+      } else {
+        // 登録日: 登録日時の前後で比較
+        comparison = new Date(a.created_at) - new Date(b.created_at)
+      }
+
+      // 降順が選ばれていれば符号を反転する
+      return sortOrder === 'desc' ? -comparison : comparison
+    })
+
+    return sorted
+  }, [filteredProperties, sortKey, sortOrder])
+
   // Supabase から物件データを取得する
   const fetchProperties = async () => {
     setLoading(true)
@@ -86,7 +114,7 @@ export default function Properties() {
     // ※ RLS でも同条件に限定しているが、意図を明確にするため明示的に絞り込む
     const { data, error } = await supabase
       .from('properties')
-      .select('id, name, rent, area, image_url, owner_id, is_public')
+      .select('id, name, rent, area, image_url, owner_id, is_public, created_at')
       .or(`owner_id.eq.${user.id},is_public.eq.true`)
       .order('created_at', { ascending: true })
 
@@ -317,6 +345,31 @@ export default function Properties() {
             </div>
           </div>
 
+          <div className="filter-field">
+            <label htmlFor="sort-key">並べ替え</label>
+            <select
+              id="sort-key"
+              value={sortKey}
+              onChange={(e) => setSortKey(e.target.value)}
+            >
+              <option value="created_at">登録日</option>
+              <option value="rent">家賃</option>
+              <option value="area">エリア</option>
+            </select>
+          </div>
+
+          <div className="filter-field">
+            <label htmlFor="sort-order">順序</label>
+            <select
+              id="sort-order"
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value)}
+            >
+              <option value="asc">昇順</option>
+              <option value="desc">降順</option>
+            </select>
+          </div>
+
           <button
             type="button"
             className="button-secondary reset-filter-button"
@@ -352,7 +405,7 @@ export default function Properties() {
               </p>
             )}
             <div className={viewMode === 'list' ? 'property-list' : 'property-grid'}>
-              {filteredProperties.map((property) => {
+              {sortedProperties.map((property) => {
                 // 自分が所有する物件かどうか（他人の公開物件は閲覧専用）
                 const isOwner = property.owner_id === user?.id
                 return (
