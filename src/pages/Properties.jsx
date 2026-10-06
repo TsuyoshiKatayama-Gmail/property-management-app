@@ -82,10 +82,12 @@ export default function Properties() {
     setLoading(true)
     setError('')
 
-    // properties テーブルから物件名・家賃・エリア・画像URLを取得（登録日時の昇順）
+    // properties テーブルから自分が所有する物件だけを取得（登録日時の昇順）
+    // ※ RLS でも所有者に限定しているが、意図を明確にするため明示的に絞り込む
     const { data, error } = await supabase
       .from('properties')
       .select('id, name, rent, area, image_url')
+      .eq('owner_id', user.id)
       .order('created_at', { ascending: true })
 
     setLoading(false)
@@ -178,8 +180,10 @@ export default function Properties() {
         .update(propertyData)
         .eq('id', editingProperty.id)
     } else {
-      // 新規追加モード: レコードを挿入する
-      result = await supabase.from('properties').insert(propertyData)
+      // 新規追加モード: ログインユーザーを所有者としてレコードを挿入する
+      result = await supabase
+        .from('properties')
+        .insert({ ...propertyData, owner_id: user.id })
     }
 
     // エラーがあれば呼び出し元（モーダル）に返して表示させる
