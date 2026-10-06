@@ -7,10 +7,21 @@ export default function PropertyFormModal({ property, onSave, onClose }) {
   const [name, setName] = useState(property?.name ?? '')
   const [rent, setRent] = useState(property?.rent ?? '')
   const [area, setArea] = useState(property?.area ?? '')
+  const [imageFile, setImageFile] = useState(null) // 新しく選択された画像ファイル
+  const [previewUrl, setPreviewUrl] = useState(property?.image_url ?? '') // プレビュー表示用URL
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
 
   const isEdit = Boolean(property) // 編集モードかどうか
+
+  // 画像ファイルが選択されたときの処理（プレビューを表示する）
+  const handleImageChange = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setImageFile(file)
+    // ブラウザ内で一時的なプレビューURLを生成する
+    setPreviewUrl(URL.createObjectURL(file))
+  }
 
   // フォーム送信時の処理
   const handleSubmit = async (e) => {
@@ -19,10 +30,12 @@ export default function PropertyFormModal({ property, onSave, onClose }) {
     setSaving(true)
 
     // 入力値を整形して親コンポーネントの保存処理に渡す
+    // imageFile は選択された場合のみ渡す（親側で Storage にアップロードする）
     const result = await onSave({
       name: name.trim(),
       rent: Number(rent),
       area: area.trim(),
+      imageFile,
     })
 
     setSaving(false)
@@ -76,6 +89,16 @@ export default function PropertyFormModal({ property, onSave, onClose }) {
             required
           />
         </label>
+
+        <label>
+          物件画像
+          <input type="file" accept="image/*" onChange={handleImageChange} />
+        </label>
+
+        {/* 選択中の画像、または既存の画像をプレビュー表示する */}
+        {previewUrl && (
+          <img className="image-preview" src={previewUrl} alt="物件画像のプレビュー" />
+        )}
 
         <div className="modal-actions">
           <button type="button" className="button-secondary" onClick={onClose}>

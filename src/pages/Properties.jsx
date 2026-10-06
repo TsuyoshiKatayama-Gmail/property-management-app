@@ -22,10 +22,10 @@ export default function Properties() {
     setLoading(true)
     setError('')
 
-    // properties テーブルから物件名・家賃・エリアを取得（登録日時の昇順）
+    // properties テーブルから物件名・家賃・エリア・画像URLを取得（登録日時の昇順）
     const { data, error } = await supabase
       .from('properties')
-      .select('id, name, rent, area')
+      .select('id, name, rent, area, image_url')
       .order('created_at', { ascending: true })
 
     setLoading(false)
@@ -64,17 +64,42 @@ export default function Properties() {
 
   // モーダルの保存処理（新規追加 or 更新）
   const handleSave = async (formData) => {
+    // 画像ファイルは DB には保存しないので、物件データ本体と分離する
+    const { imageFile, ...propertyData } = formData
+
+    // 画像が選択されていれば Supabase Storage にアップロードし、公開URLを取得する
+    if (imageFile) {
+      const fileExt = imageFile.name.split('.').pop()
+      // ユーザーごとのフォルダに一意なファイル名で保存する
+      const filePath = `${user.id}/${Date.now()}.${fileExt}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('property-images')
+        .upload(filePath, imageFile)
+
+      if (uploadError) {
+        // アップロード失敗時はモーダルにエラーを返す
+        return { error: uploadError }
+      }
+
+      // 取得した公開URLを保存データに含める
+      const { data } = supabase.storage
+        .from('property-images')
+        .getPublicUrl(filePath)
+      propertyData.image_url = data.publicUrl
+    }
+
     let result
 
     if (editingProperty) {
       // 編集モード: 既存レコードを更新する
       result = await supabase
         .from('properties')
-        .update(formData)
+        .update(propertyData)
         .eq('id', editingProperty.id)
     } else {
       // 新規追加モード: レコードを挿入する
-      result = await supabase.from('properties').insert(formData)
+      result = await supabase.from('properties').insert(propertyData)
     }
 
     // エラーがあれば呼び出し元（モーダル）に返して表示させる
@@ -149,6 +174,14 @@ export default function Properties() {
           <div className="property-grid">
             {properties.map((property) => (
               <div className="property-card" key={property.id}>
+                {/* 画像が登録されていれば表示する */}
+                {property.image_url && (
+                  <img
+                    className="property-image"
+                    src={property.image_url}
+                    alt={property.name}
+                  />
+                )}
                 <h2 className="property-name">{property.name}</h2>
                 <p className="property-rent">{formatRent(property.rent)} / 月</p>
                 <p className="property-area">エリア：{property.area}</p>
