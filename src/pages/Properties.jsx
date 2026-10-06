@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabaseClient'
@@ -28,6 +28,54 @@ export default function Properties() {
     setViewMode(mode)
     localStorage.setItem('propertiesViewMode', mode)
   }
+
+  // 検索・絞り込みの入力値
+  const [keyword, setKeyword] = useState('') // 物件名・エリアのキーワード検索
+  const [areaFilter, setAreaFilter] = useState('') // エリアでの絞り込み（空なら全て）
+  const [rentMin, setRentMin] = useState('') // 家賃の下限
+  const [rentMax, setRentMax] = useState('') // 家賃の上限
+
+  // 絞り込み条件をすべてクリアする
+  const handleResetFilters = () => {
+    setKeyword('')
+    setAreaFilter('')
+    setRentMin('')
+    setRentMax('')
+  }
+
+  // 絞り込み条件が1つでも設定されているか
+  const hasActiveFilter =
+    keyword.trim() !== '' || areaFilter !== '' || rentMin !== '' || rentMax !== ''
+
+  // エリア絞り込み用の選択肢を既存データから重複なく生成する（五十音順）
+  const areaOptions = useMemo(() => {
+    const areas = properties.map((p) => p.area).filter(Boolean)
+    return Array.from(new Set(areas)).sort((a, b) => a.localeCompare(b, 'ja'))
+  }, [properties])
+
+  // 入力された条件で物件を絞り込む
+  const filteredProperties = useMemo(() => {
+    const trimmedKeyword = keyword.trim().toLowerCase()
+    const min = rentMin === '' ? null : Number(rentMin)
+    const max = rentMax === '' ? null : Number(rentMax)
+
+    return properties.filter((property) => {
+      // キーワード: 物件名またはエリアに部分一致するか
+      if (trimmedKeyword) {
+        const target = `${property.name} ${property.area}`.toLowerCase()
+        if (!target.includes(trimmedKeyword)) return false
+      }
+
+      // エリア: 選択されたエリアと一致するか
+      if (areaFilter && property.area !== areaFilter) return false
+
+      // 家賃: 下限・上限の範囲内か
+      if (min !== null && property.rent < min) return false
+      if (max !== null && property.rent > max) return false
+
+      return true
+    })
+  }, [properties, keyword, areaFilter, rentMin, rentMax])
 
   // Supabase から物件データを取得する
   const fetchProperties = async () => {
@@ -211,6 +259,71 @@ export default function Properties() {
         </div>
       </header>
 
+      {/* 検索・絞り込みバー（物件が1件以上あるときのみ表示） */}
+      {!loading && !error && properties.length > 0 && (
+        <div className="properties-toolbar">
+          <div className="filter-field filter-keyword">
+            <label htmlFor="filter-keyword">キーワード</label>
+            <input
+              id="filter-keyword"
+              type="text"
+              placeholder="物件名・エリアで検索"
+              value={keyword}
+              onChange={(e) => setKeyword(e.target.value)}
+            />
+          </div>
+
+          <div className="filter-field">
+            <label htmlFor="filter-area">エリア</label>
+            <select
+              id="filter-area"
+              value={areaFilter}
+              onChange={(e) => setAreaFilter(e.target.value)}
+            >
+              <option value="">すべて</option>
+              {areaOptions.map((area) => (
+                <option key={area} value={area}>
+                  {area}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="filter-field filter-rent">
+            <label htmlFor="filter-rent-min">家賃（円）</label>
+            <div className="rent-range">
+              <input
+                id="filter-rent-min"
+                type="number"
+                placeholder="下限"
+                min="0"
+                value={rentMin}
+                onChange={(e) => setRentMin(e.target.value)}
+              />
+              <span className="rent-range-separator">〜</span>
+              <input
+                id="filter-rent-max"
+                type="number"
+                placeholder="上限"
+                min="0"
+                value={rentMax}
+                onChange={(e) => setRentMax(e.target.value)}
+                aria-label="家賃の上限"
+              />
+            </div>
+          </div>
+
+          <button
+            type="button"
+            className="button-secondary reset-filter-button"
+            onClick={handleResetFilters}
+            disabled={!hasActiveFilter}
+          >
+            条件をクリア
+          </button>
+        </div>
+      )}
+
       <main>
         {/* 取得中・エラー・0件・一覧表示をそれぞれ出し分ける */}
         {loading && <p className="status-text">読み込み中...</p>}
@@ -221,9 +334,21 @@ export default function Properties() {
           <p className="status-text">登録されている物件はありません。</p>
         )}
 
-        {!loading && !error && properties.length > 0 && (
-          <div className={viewMode === 'list' ? 'property-list' : 'property-grid'}>
-            {properties.map((property) => (
+        {/* 物件はあるが絞り込み結果が0件の場合 */}
+        {!loading && !error && properties.length > 0 && filteredProperties.length === 0 && (
+          <p className="status-text">条件に一致する物件はありません。</p>
+        )}
+
+        {!loading && !error && filteredProperties.length > 0 && (
+          <>
+            {/* 絞り込み中は件数を表示する */}
+            {hasActiveFilter && (
+              <p className="result-count">
+                {properties.length} 件中 {filteredProperties.length} 件を表示
+              </p>
+            )}
+            <div className={viewMode === 'list' ? 'property-list' : 'property-grid'}>
+              {filteredProperties.map((property) => (
               <div className="property-card" key={property.id}>
                 {/* 画像が登録されていれば表示し、無ければ NO IMAGE を表示する */}
                 <img
@@ -255,8 +380,9 @@ export default function Properties() {
                   </button>
                 </div>
               </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          </>
         )}
       </main>
 

@@ -376,6 +376,90 @@ body {
 }
 
 /* 取得中・0件などのステータス表示 */
+/* ===== 検索・絞り込みバー ===== */
+.properties-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1.25rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.filter-field label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.filter-field input,
+.filter-field select {
+  padding: 0.55rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: #111827;
+  background-color: #ffffff;
+}
+
+.filter-field input:focus,
+.filter-field select:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+/* キーワード入力は広めに取り、余白を埋める */
+.filter-keyword {
+  flex: 1 1 220px;
+}
+
+.filter-keyword input {
+  width: 100%;
+}
+
+/* 家賃の下限〜上限入力 */
+.rent-range {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.rent-range input {
+  width: 100px;
+}
+
+.rent-range-separator {
+  color: #6b7280;
+}
+
+/* 条件クリアボタン（下端をそろえる） */
+.reset-filter-button {
+  padding: 0.55rem 1rem;
+}
+
+.reset-filter-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 絞り込み結果の件数表示 */
+.result-count {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-bottom: 1rem;
+}
+
 .status-text {
   color: #6b7280;
   padding: 2rem 0;
