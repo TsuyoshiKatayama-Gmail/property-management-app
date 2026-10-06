@@ -10,7 +10,7 @@ export default function PropertyFormModal({ property, onSave, onClose }) {
   const [imageFile, setImageFile] = useState(null) // 新しく選択された画像ファイル
   const [previewUrl, setPreviewUrl] = useState(property?.image_url ?? '') // プレビュー表示用URL
   const [removeImage, setRemoveImage] = useState(false) // 既存画像を削除するかどうか
-  const [isPublic, setIsPublic] = useState(property?.is_public ?? false) // 公開するかどうか
+  const [isPublic, setIsPublic] = useState(property?.is_public ?? true) // 公開するかどうか（新規は既定で公開）
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
 

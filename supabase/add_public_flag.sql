@@ -5,6 +5,7 @@
 --   物件に「公開フラグ（is_public）」を持たせ、ON の物件は
 --   所有者以外のログインユーザーも「閲覧のみ」できるようにする。
 --   追加・編集・削除は従来どおり所有者本人だけが行える。
+--   ユーザーが指定しない場合は「公開（true）」をデフォルトとする。
 --
 -- 使い方:
 --   Supabase ダッシュボード > SQL Editor に貼り付けて実行してください。
@@ -12,9 +13,14 @@
 -- ============================================================
 
 -- 1) 公開フラグのカラムを追加する（既にあれば何もしない）
---    デフォルトは false（非公開）。
+--    デフォルトは true（指定がなければ公開）。
 alter table public.properties
-  add column if not exists is_public boolean not null default false;
+  add column if not exists is_public boolean not null default true;
+
+-- 1-2) 既にカラムが存在する場合に備えてデフォルト値を true に更新する
+--      （add column if not exists は既存カラムのデフォルトを変更しないため）
+alter table public.properties
+  alter column is_public set default true;
 
 -- 2) 閲覧（SELECT）ポリシーを「自分の物件 または 公開物件」に貼り替える
 --    まず所有者限定の旧ポリシーを削除する。
