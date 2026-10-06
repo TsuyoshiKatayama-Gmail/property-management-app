@@ -8,10 +8,14 @@
 ## プロジェクト概要
 
 - **名称**: property-management-app（物件管理アプリ）
-- **目的**: 不動産・賃貸物件の管理を行うアプリケーション
-- **技術スタック**: 未定（選定後にこのセクションを更新すること）
-
-> 💡 技術スタックが確定したら、下記「開発コマンド」「ディレクトリ構成」「アーキテクチャ」の各セクションを実際の内容に更新してください。
+- **目的**: 不動産・賃貸物件の管理を行う Web アプリケーション
+- **技術スタック**:
+  - フロントエンド: React 18 + Vite
+  - 認証・バックエンド: Supabase（メールアドレス＋パスワード認証）
+  - ルーティング: React Router v6
+- **主な機能**:
+  - メールアドレス＋パスワードによる会員登録・ログイン・ログアウト
+  - ログイン必須の物件一覧画面（未ログイン時はログイン画面へリダイレクト）
 
 ---
 
@@ -54,45 +58,83 @@ READMEにセットアップ手順を追記
 
 ---
 
+## セットアップ
+
+1. 依存関係をインストールする
+   ```bash
+   npm install
+   ```
+2. `.env.example` をコピーして `.env` を作成し、Supabase の接続情報を設定する
+   ```bash
+   cp .env.example .env
+   # VITE_SUPABASE_URL と VITE_SUPABASE_PUBLISHABLE_KEY を自分のプロジェクトの値に書き換える
+   ```
+
 ## 開発コマンド
 
-> 技術スタック確定後に更新してください。一般的な例：
-
 ```bash
-# 依存関係のインストール
-# npm install など
+# 開発サーバー起動（http://localhost:5173）
+npm run dev
 
-# 開発サーバー起動
-# npm run dev など
+# 本番ビルド
+npm run build
 
-# ビルド
-# npm run build など
-
-# テスト
-# npm test など
-
-# Lint / フォーマット
-# npm run lint など
+# ビルド結果のプレビュー
+npm run preview
 ```
+
+---
+
+## 環境変数
+
+Supabase の接続情報は `.env` で管理し、**Git にはコミットしない**（`.gitignore` で除外済み）。
+
+| 変数名 | 説明 |
+|--------|------|
+| `VITE_SUPABASE_URL` | Supabase の Project URL |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | Supabase の Publishable key |
+
+> Vite では環境変数を `VITE_` プレフィックス付きで定義し、`import.meta.env.VITE_xxx` で参照する。
 
 ---
 
 ## ディレクトリ構成
 
-> 技術スタック確定後に実際の構成を記載してください。
-
 ```
 property-management-app/
-├── CLAUDE.md          # 本ファイル
-├── README.md
-└── ...（確定後に追記）
+├── CLAUDE.md               # 本ファイル
+├── .env                    # Supabase 接続情報（Git管理外）
+├── .env.example            # .env のテンプレート
+├── index.html              # エントリー HTML
+├── vite.config.js          # Vite 設定
+├── package.json
+└── src/
+    ├── main.jsx            # アプリのエントリーポイント
+    ├── App.jsx             # ルーティング定義
+    ├── index.css           # 全体スタイル
+    ├── lib/
+    │   └── supabaseClient.js   # Supabase クライアント初期化
+    ├── context/
+    │   └── AuthContext.jsx     # 認証状態の管理（Context + カスタムフック）
+    ├── components/
+    │   └── ProtectedRoute.jsx  # 認証ガード（未ログイン時はリダイレクト）
+    └── pages/
+        ├── Login.jsx           # ログイン画面
+        ├── Register.jsx        # 会員登録画面
+        └── Properties.jsx      # 物件一覧画面（ログイン必須）
 ```
 
 ---
 
 ## アーキテクチャ / 設計方針
 
-> 技術スタック確定後に、主要なモジュール・データモデル・画面構成などを記載してください。
+- **認証状態の管理**: `AuthContext` が Supabase のセッションを保持し、`onAuthStateChange` で状態変化を監視する。各コンポーネントは `useAuth()` フックで `session` / `user` / `signIn` / `signUp` / `signOut` を利用する。
+- **ルート保護**: ログイン必須の画面は `ProtectedRoute` でラップする。未ログイン時は `/login` へリダイレクトし、セッション確認中はローディング表示を出す。
+- **画面構成**:
+  - `/login` … ログイン画面
+  - `/register` … 会員登録画面
+  - `/` … 物件一覧画面（ログイン必須）
+- **物件データ**: 現状は `Properties.jsx` 内のダミーデータ。将来的に Supabase のテーブルから取得する想定。
 
 ---
 
