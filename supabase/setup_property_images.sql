@@ -30,3 +30,13 @@ drop policy if exists "画像は誰でも閲覧できる" on storage.objects;
 create policy "画像は誰でも閲覧できる"
 on storage.objects for select to public
 using (bucket_id = 'property-images');
+
+-- 5) 削除用ポリシー：いったん削除してから作り直す
+--    ログイン済みユーザーは自分のフォルダ（ユーザーID配下）の画像を削除可能
+drop policy if exists "認証ユーザーは自分の画像を削除できる" on storage.objects;
+create policy "認証ユーザーは自分の画像を削除できる"
+on storage.objects for delete to authenticated
+using (
+  bucket_id = 'property-images'
+  and (storage.foldername(name))[1] = auth.uid()::text
+);

@@ -9,6 +9,7 @@ export default function PropertyFormModal({ property, onSave, onClose }) {
   const [area, setArea] = useState(property?.area ?? '')
   const [imageFile, setImageFile] = useState(null) // 新しく選択された画像ファイル
   const [previewUrl, setPreviewUrl] = useState(property?.image_url ?? '') // プレビュー表示用URL
+  const [removeImage, setRemoveImage] = useState(false) // 既存画像を削除するかどうか
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
 
@@ -19,8 +20,16 @@ export default function PropertyFormModal({ property, onSave, onClose }) {
     const file = e.target.files?.[0]
     if (!file) return
     setImageFile(file)
+    setRemoveImage(false) // 新しい画像を選んだので削除フラグは解除する
     // ブラウザ内で一時的なプレビューURLを生成する
     setPreviewUrl(URL.createObjectURL(file))
+  }
+
+  // 「画像を削除」ボタンの処理（プレビューを消して削除フラグを立てる）
+  const handleRemoveImage = () => {
+    setImageFile(null)
+    setPreviewUrl('')
+    setRemoveImage(true)
   }
 
   // フォーム送信時の処理
@@ -31,11 +40,13 @@ export default function PropertyFormModal({ property, onSave, onClose }) {
 
     // 入力値を整形して親コンポーネントの保存処理に渡す
     // imageFile は選択された場合のみ渡す（親側で Storage にアップロードする）
+    // removeImage が true の場合は親側で画像を削除する
     const result = await onSave({
       name: name.trim(),
       rent: Number(rent),
       area: area.trim(),
       imageFile,
+      removeImage,
     })
 
     setSaving(false)
@@ -97,7 +108,16 @@ export default function PropertyFormModal({ property, onSave, onClose }) {
 
         {/* 選択中の画像、または既存の画像をプレビュー表示する */}
         {previewUrl && (
-          <img className="image-preview" src={previewUrl} alt="物件画像のプレビュー" />
+          <div className="image-preview-wrapper">
+            <img className="image-preview" src={previewUrl} alt="物件画像のプレビュー" />
+            <button
+              type="button"
+              className="button-danger"
+              onClick={handleRemoveImage}
+            >
+              画像を削除
+            </button>
+          </div>
         )}
 
         <div className="modal-actions">

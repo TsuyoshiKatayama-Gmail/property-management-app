@@ -62,10 +62,19 @@ export default function Properties() {
     setEditingProperty(null)
   }
 
+  // 公開URLから Storage 上のファイルパスを取り出して削除する
+  const removeStorageFile = async (publicUrl) => {
+    const marker = '/property-images/'
+    const index = publicUrl.indexOf(marker)
+    if (index === -1) return // パスを特定できない場合は何もしない
+    const filePath = publicUrl.slice(index + marker.length)
+    await supabase.storage.from('property-images').remove([filePath])
+  }
+
   // モーダルの保存処理（新規追加 or 更新）
   const handleSave = async (formData) => {
-    // 画像ファイルは DB には保存しないので、物件データ本体と分離する
-    const { imageFile, ...propertyData } = formData
+    // 画像ファイル・削除フラグは DB には保存しないので、物件データ本体と分離する
+    const { imageFile, removeImage, ...propertyData } = formData
 
     // 画像が選択されていれば Supabase Storage にアップロードし、公開URLを取得する
     if (imageFile) {
@@ -87,6 +96,17 @@ export default function Properties() {
         .from('property-images')
         .getPublicUrl(filePath)
       propertyData.image_url = data.publicUrl
+
+      // 画像を差し替えた場合は、元の画像ファイルを Storage から削除する
+      if (editingProperty?.image_url) {
+        await removeStorageFile(editingProperty.image_url)
+      }
+    } else if (removeImage) {
+      // 「画像を削除」が押された場合：URLを空にし、Storage のファイルも削除する
+      propertyData.image_url = null
+      if (editingProperty?.image_url) {
+        await removeStorageFile(editingProperty.image_url)
+      }
     }
 
     let result
