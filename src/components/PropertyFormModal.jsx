@@ -129,7 +129,10 @@ export default function PropertyFormModal({ property, onSave, onClose }) {
             checked={isPublic}
             onChange={(e) => setIsPublic(e.target.checked)}
           />
-          この物件を公開する（他のユーザーが閲覧できます）
+          <span className="checkbox-text">
+            この物件を公開する
+            <span className="checkbox-note">（他のユーザーが閲覧できます）</span>
+          </span>
         </label>
 
         <div className="modal-actions">

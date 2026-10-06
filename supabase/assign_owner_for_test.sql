@@ -18,7 +18,7 @@
 update public.properties
 set owner_id = (
   select id from auth.users
-  where email = 'あなたのメールアドレス'   -- ← ここを書き換える
+  where email = 'tsuyoshi.katayama.samurai@gmail.com'   -- ← ここを書き換える
 )
 where owner_id is null;
 
